@@ -26,7 +26,8 @@ public abstract class EntityRendererMixin<T extends Entity> {
         EntityRenderState state = GreenscreenMod.greenscreen().nameTageRenderState();
         if (state == EntityRenderState.ALL) return;
         if (state == EntityRenderState.PLAYERS && entity instanceof Player) return;
-        if (state == EntityRenderState.SELF && entity.is(Minecraft.getInstance().player)) return;
+        if (state == EntityRenderState.SELF &&
+                entity.getScoreboardName().equals(Minecraft.getInstance().player.getScoreboardName())) return;
 
         ci.cancel();
     }
