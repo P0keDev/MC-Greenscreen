@@ -31,14 +31,18 @@ import org.lwjgl.glfw.GLFW;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.integer;
+import static com.mojang.brigadier.arguments.StringArgumentType.getString;
+import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 public class GreenscreenMod implements ModInitializer, ModMenuApi {
+	private static final Component WHITELIST_COMMAND_FORMAT =
+			Component.literal("/greenscreen whitelist [add|remove|clear]");
 	private static final Component COLOR_COMMAND_FORMAT =
 			Component.literal("/greenscreen color toggle | /greenscreen color <r> <g> <b>");
 	private static final Component GREENSCREEN_COMMAND_FORMAT =
-			Component.literal("/greenscreen <toggle|blocks|particles|entities|stands|color>");
+			Component.literal("/greenscreen [toggle|blocks|particles|entities|stands|color|whitelist]");
 
 	private static GreenscreenMod instance;
 	private static Greenscreen greenscreen;
@@ -162,6 +166,40 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		}
 	}
 
+	private int whitelistAdd(FabricClientCommandSource src, String name) {
+		boolean result = greenscreen().whitelistAdd(name);
+		if (!result) {
+			src.sendError(Component.literal("That entry already exists on the whitelist!"));
+			return 1;
+		} else {
+			src.sendFeedback(Component.literal("Added '" + name + "' to whitelist!"));
+			return 0;
+		}
+	}
+
+	private int whitelistRemove(FabricClientCommandSource src, String name) {
+		boolean result = greenscreen().whitelistRemove(name);
+		if (!result) {
+			src.sendError(Component.literal("No such whitelist entry!"));
+			return 1;
+		} else {
+			src.sendFeedback(Component.literal("Removed '" + name + "' from whitelist!"));
+			return 0;
+		}
+	}
+
+	private int whitelistClear(FabricClientCommandSource src) {
+		greenscreen().whitelistClear();
+		src.sendFeedback(Component.literal("Cleared whitelist!"));
+		return 0;
+	}
+
+	private int whitelistList(FabricClientCommandSource src) {
+		src.sendFeedback(Component.literal(
+				"Current whitelist: " + String.join(", " , greenscreen().getWhitelist())));
+		return 1;
+	}
+
 	private void registerCommands(CommandDispatcher<FabricClientCommandSource> dispatcher) {
 		LiteralCommandNode<FabricClientCommandSource> skyColorNode = literal("color")
 				.then(literal("toggle")
@@ -176,6 +214,22 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 														getInteger(ctx, "b"))))))
 				.executes(ctx -> {
 					ctx.getSource().sendError(COLOR_COMMAND_FORMAT);
+					return 1;
+				}).build();
+
+		LiteralCommandNode<FabricClientCommandSource> whitelistNode = literal("whitelist")
+				.then(literal("add")
+						.then(argument("name", string())
+								.executes(ctx -> whitelistAdd(ctx.getSource(), getString(ctx, "name")))))
+				.then(literal("remove")
+						.then(argument("name", string())
+								.executes(ctx -> whitelistRemove(ctx.getSource(), getString(ctx, "name")))))
+				.then(literal("clear")
+						.executes(ctx -> whitelistClear(ctx.getSource())))
+				.then(literal("list")
+						.executes(ctx -> whitelistList(ctx.getSource())))
+				.executes(ctx -> {
+					ctx.getSource().sendError(WHITELIST_COMMAND_FORMAT);
 					return 1;
 				}).build();
 
@@ -197,6 +251,10 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 						.redirect(skyColorNode))
 				.then(literal("color")
 						.redirect(skyColorNode))
+				.then(literal("whitelist")
+						.redirect(whitelistNode))
+				.then(literal("wl")
+						.redirect(whitelistNode))
 				.executes(ctx -> {
 					ctx.getSource().sendError(GREENSCREEN_COMMAND_FORMAT);
 					return 1;
@@ -248,6 +306,11 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		category.addEntry(configBuilder.entryBuilder()
 				.startColorField(Component.literal("Custom Sky Color"), greenscreen().getSkyColor().getRGB() & 0xffffff) // mask out transparency value
 				.setSaveConsumer2(newValue -> greenscreen().setSkyColor(newValue.getRed(), newValue.getGreen(), newValue.getBlue()))
+				.build());
+
+		category.addEntry(configBuilder.entryBuilder()
+				.startStrList(Component.literal("Entity Whitelist"), greenscreen().getWhitelist())
+				.setSaveConsumer(newValue -> greenscreen().setWhitelist(newValue))
 				.build());
 
 		return configBuilder.build();

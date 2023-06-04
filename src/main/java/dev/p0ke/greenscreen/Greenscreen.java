@@ -3,15 +3,21 @@ package dev.p0ke.greenscreen;
 import net.minecraft.ChatFormatting;
 
 import java.awt.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 
 public class Greenscreen {
     private BooleanRenderState enabled;
 
     private BooleanRenderState blocks;
     private BooleanRenderState particles;
-    private EntityRenderState entities;
     private BooleanRenderState armorStands;
+
+    private EntityRenderState entities;
     private EntityRenderState nameTags;
+    private Set<String> whitelist;
 
     private BooleanRenderState customSky;
     private Color skyColor;
@@ -24,6 +30,8 @@ public class Greenscreen {
         entities = EntityRenderState.SELF;
         armorStands = BooleanRenderState.DISABLED;
         nameTags = EntityRenderState.SELF;
+
+        whitelist = new HashSet<>();
 
         customSky = BooleanRenderState.ENABLED;
         skyColor = new Color(0, 255, 0);
@@ -59,6 +67,14 @@ public class Greenscreen {
 
     public Color getSkyColor() {
         return skyColor;
+    }
+
+    public List<String> getWhitelist() {
+        return whitelist.stream().toList();
+    }
+
+    public boolean isWhitelisted(String name) {
+        return whitelist.contains(name.toLowerCase());
     }
 
     public BooleanRenderState toggleEnabled() {
@@ -131,6 +147,26 @@ public class Greenscreen {
         return true;
     }
 
+    public void setWhitelist(List<String> names) {
+        whitelist.clear();
+        names.forEach(n -> {
+            if (!n.isEmpty())
+                whitelist.add(n.toLowerCase());
+        });
+    }
+
+    public boolean whitelistAdd(String name) {
+        return whitelist.add(name.toLowerCase());
+    }
+
+    public boolean whitelistRemove(String name) {
+        return whitelist.remove(name.toLowerCase());
+    }
+
+    public void whitelistClear() {
+        whitelist.clear();
+    }
+
     public enum BooleanRenderState {
         ENABLED(ChatFormatting.GREEN),
         DISABLED(ChatFormatting.RED);
@@ -159,7 +195,7 @@ public class Greenscreen {
     public enum EntityRenderState {
         ALL,
         PLAYERS,
-        // WHITELIST,
+        WHITELIST,
         SELF,
         NONE;
 
