@@ -10,7 +10,8 @@
     "EntityRendererMixin",
     "FogRendererMixin",
     "LevelRendererMixin",
-    "ParticleEngineMixin"
+    "ParticleEngineMixin",
+    "ScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

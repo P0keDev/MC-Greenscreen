@@ -14,6 +14,8 @@ import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import dev.p0ke.greenscreen.Greenscreen.BooleanRenderState;
 import dev.p0ke.greenscreen.Greenscreen.EntityRenderState;
+import dev.p0ke.greenscreen.mixin.ScreenMixin;
+import java.util.function.Supplier;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import net.fabricmc.api.ModInitializer;
@@ -23,9 +25,12 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.core.pattern.AbstractStyleNameConverter.Green;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -319,6 +324,32 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 	@Override
 	public ConfigScreenFactory<?> getModConfigScreenFactory() {
 		return this::createConfigScreen;
+	}
+
+	public GreenscreenButton createPauseScreenButton(PauseScreen pauseScreen) {
+		if (pauseScreen.children().stream().anyMatch(child -> child instanceof GreenscreenButton)) return null;
+
+		GreenscreenButton greenscreenButton = new GreenscreenButton(() -> this.createConfigScreen(pauseScreen),
+				pauseScreen.width - 24, pauseScreen.height - 24);
+		return greenscreenButton;
+	}
+
+	private static class GreenscreenButton extends Button {
+
+		GreenscreenButton(Supplier<Screen> supplier, int x, int y) {
+			super(x, y, 20, 20, Component.literal(""),
+					button -> Minecraft.getInstance().setScreen(supplier.get()), Button.DEFAULT_NARRATION);
+		}
+
+		@Override
+		public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+			super.render(poseStack, mouseX, mouseY, partialTicks);
+
+
+			fill(poseStack, this.getX() + 3, this.getY() + 3,
+					this.getX() + 17, this.getY() + 17, 0xFF00FF00);
+
+		}
 	}
 
 }
