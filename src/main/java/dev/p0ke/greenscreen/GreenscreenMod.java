@@ -14,7 +14,6 @@ import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import dev.p0ke.greenscreen.Greenscreen.BooleanRenderState;
 import dev.p0ke.greenscreen.Greenscreen.EntityRenderState;
-import dev.p0ke.greenscreen.mixin.ScreenMixin;
 import java.util.function.Supplier;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -25,12 +24,12 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import org.apache.logging.log4j.core.pattern.AbstractStyleNameConverter.Green;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -342,11 +341,10 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		}
 
 		@Override
-		public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-			super.render(poseStack, mouseX, mouseY, partialTicks);
+		public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+			super.render(graphics, mouseX, mouseY, partialTicks);
 
-
-			fill(poseStack, this.getX() + 3, this.getY() + 3,
+			graphics.fill(this.getX() + 3, this.getY() + 3,
 					this.getX() + 17, this.getY() + 17, 0xFF00FF00);
 
 		}
