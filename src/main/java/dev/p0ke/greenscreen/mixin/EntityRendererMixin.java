@@ -28,6 +28,8 @@ public abstract class EntityRendererMixin<T extends Entity> {
         if (state == EntityRenderState.PLAYERS && entity instanceof Player) return;
         if (state == EntityRenderState.WHITELIST &&
                 GreenscreenMod.greenscreen().isWhitelisted(entity.getScoreboardName())) return;
+        if (state == EntityRenderState.BLACKLIST &&
+                !GreenscreenMod.greenscreen().isBlacklisted(entity.getScoreboardName())) return;
         if (state == EntityRenderState.SELF &&
                 entity.getScoreboardName().equals(Minecraft.getInstance().player.getScoreboardName())) return;
 

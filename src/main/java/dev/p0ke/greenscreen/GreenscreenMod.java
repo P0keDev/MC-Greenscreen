@@ -42,11 +42,11 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.lit
 
 public class GreenscreenMod implements ModInitializer, ModMenuApi {
 	private static final Component WHITELIST_COMMAND_FORMAT =
-			Component.literal("/greenscreen whitelist [add|remove|clear]");
+			Component.literal("/greenscreen [whitelist|blacklist] [add|remove|clear]");
 	private static final Component COLOR_COMMAND_FORMAT =
 			Component.literal("/greenscreen color toggle | /greenscreen color <r> <g> <b>");
 	private static final Component GREENSCREEN_COMMAND_FORMAT =
-			Component.literal("/greenscreen [toggle|blocks|particles|entities|stands|color|whitelist]");
+			Component.literal("/greenscreen [toggle|blocks|particles|entities|stands|color|whitelist|blacklist]");
 
 	private static GreenscreenMod instance;
 	private static Greenscreen greenscreen;
@@ -204,6 +204,40 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		return 1;
 	}
 
+	private int blacklistAdd(FabricClientCommandSource src, String name) {
+		boolean result = greenscreen().blacklistAdd(name);
+		if (!result) {
+			src.sendError(Component.literal("That entry already exists on the blacklist!"));
+			return 1;
+		} else {
+			src.sendFeedback(Component.literal("Added '" + name + "' to blacklist!"));
+			return 0;
+		}
+	}
+
+	private int blacklistRemove(FabricClientCommandSource src, String name) {
+		boolean result = greenscreen().blacklistRemove(name);
+		if (!result) {
+			src.sendError(Component.literal("No such blacklist entry!"));
+			return 1;
+		} else {
+			src.sendFeedback(Component.literal("Removed '" + name + "' from blacklist!"));
+			return 0;
+		}
+	}
+
+	private int blacklistClear(FabricClientCommandSource src) {
+		greenscreen().blacklistClear();
+		src.sendFeedback(Component.literal("Cleared blacklist!"));
+		return 0;
+	}
+
+	private int blacklistList(FabricClientCommandSource src) {
+		src.sendFeedback(Component.literal(
+				"Current blacklist: " + String.join(", " , greenscreen().getBlacklist())));
+		return 1;
+	}
+
 	private void registerCommands(CommandDispatcher<FabricClientCommandSource> dispatcher) {
 		LiteralCommandNode<FabricClientCommandSource> skyColorNode = literal("color")
 				.then(literal("toggle")
@@ -237,6 +271,22 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 					return 1;
 				}).build();
 
+		LiteralCommandNode<FabricClientCommandSource> blacklistNode = literal("blacklist")
+				.then(literal("add")
+						.then(argument("name", string())
+								.executes(ctx -> blacklistAdd(ctx.getSource(), getString(ctx, "name")))))
+				.then(literal("remove")
+						.then(argument("name", string())
+								.executes(ctx -> blacklistRemove(ctx.getSource(), getString(ctx, "name")))))
+				.then(literal("clear")
+						.executes(ctx -> blacklistClear(ctx.getSource())))
+				.then(literal("list")
+						.executes(ctx -> blacklistList(ctx.getSource())))
+				.executes(ctx -> {
+					ctx.getSource().sendError(WHITELIST_COMMAND_FORMAT);
+					return 1;
+				}).build();
+
 
 		LiteralCommandNode<FabricClientCommandSource> greenscreenNode = dispatcher.register(literal("greenscreen")
 				.then(literal("toggle")
@@ -259,6 +309,10 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 						.redirect(whitelistNode))
 				.then(literal("wl")
 						.redirect(whitelistNode))
+				.then(literal("blacklist")
+						.redirect(blacklistNode))
+				.then(literal("bl")
+						.redirect(blacklistNode))
 				.executes(ctx -> {
 					ctx.getSource().sendError(GREENSCREEN_COMMAND_FORMAT);
 					return 1;
@@ -315,6 +369,11 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		category.addEntry(configBuilder.entryBuilder()
 				.startStrList(Component.literal("Entity Whitelist"), greenscreen().getWhitelist())
 				.setSaveConsumer(newValue -> greenscreen().setWhitelist(newValue))
+				.build());
+
+		category.addEntry(configBuilder.entryBuilder()
+				.startStrList(Component.literal("Entity Blacklist"), greenscreen().getBlacklist())
+				.setSaveConsumer(newValue -> greenscreen().setBlacklist(newValue))
 				.build());
 
 		return configBuilder.build();

@@ -18,6 +18,7 @@ public class Greenscreen {
     private EntityRenderState entities;
     private EntityRenderState nameTags;
     private Set<String> whitelist;
+    private Set<String> blacklist;
 
     private BooleanRenderState customSky;
     private Color skyColor;
@@ -32,6 +33,7 @@ public class Greenscreen {
         nameTags = EntityRenderState.SELF;
 
         whitelist = new HashSet<>();
+        blacklist = new HashSet<>();
 
         customSky = BooleanRenderState.ENABLED;
         skyColor = new Color(0, 255, 0);
@@ -75,6 +77,14 @@ public class Greenscreen {
 
     public boolean isWhitelisted(String name) {
         return whitelist.contains(name.toLowerCase());
+    }
+
+    public List<String> getBlacklist() {
+        return blacklist.stream().toList();
+    }
+
+    public boolean isBlacklisted(String name) {
+        return blacklist.contains(name.toLowerCase());
     }
 
     public BooleanRenderState toggleEnabled() {
@@ -167,6 +177,26 @@ public class Greenscreen {
         whitelist.clear();
     }
 
+    public void setBlacklist(List<String> names) {
+        blacklist.clear();
+        names.forEach(n -> {
+            if (!n.isEmpty())
+                blacklist.add(n.toLowerCase());
+        });
+    }
+
+    public boolean blacklistAdd(String name) {
+        return blacklist.add(name.toLowerCase());
+    }
+
+    public boolean blacklistRemove(String name) {
+        return blacklist.remove(name.toLowerCase());
+    }
+
+    public void blacklistClear() {
+        blacklist.clear();
+    }
+
     public enum BooleanRenderState {
         ENABLED(ChatFormatting.GREEN),
         DISABLED(ChatFormatting.RED);
@@ -196,6 +226,7 @@ public class Greenscreen {
         ALL,
         PLAYERS,
         WHITELIST,
+        BLACKLIST,
         SELF,
         NONE;
 
