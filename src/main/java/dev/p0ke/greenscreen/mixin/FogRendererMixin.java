@@ -16,6 +16,7 @@ public abstract class FogRendererMixin {
     at = @At("HEAD"), cancellable = true)
     private static void onSetupFog(Camera camera, FogMode fogMode, float farPlaneDistance, boolean bl, float f, CallbackInfo ci) {
         if (!GreenscreenMod.greenscreen().state().enabled()) return;
+        if (!GreenscreenMod.greenscreen().customSkyRenderState().enabled()) return;
 
         ci.cancel();
     }

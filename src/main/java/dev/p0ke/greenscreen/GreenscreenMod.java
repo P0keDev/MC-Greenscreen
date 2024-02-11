@@ -14,6 +14,7 @@ import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import dev.p0ke.greenscreen.Greenscreen.BooleanRenderState;
 import dev.p0ke.greenscreen.Greenscreen.EntityRenderState;
+import java.util.List;
 import java.util.function.Supplier;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -22,14 +23,21 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -59,6 +67,7 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 
 		KeyMapping toggleKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("Toggle Greenscreen", Type.KEYSYM, GLFW.GLFW_KEY_G, "GreenscreenMod"));
 		KeyMapping configKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("Open Config", Type.KEYSYM, GLFW.GLFW_KEY_F, "GreenscreenMod"));
+		KeyMapping entityNameKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("Get Entity Name", Type.KEYSYM, GLFW.GLFW_KEY_N, "GreenscreenMod"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (toggleKeybind.consumeClick()) {
@@ -67,6 +76,18 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 
 			while (configKeybind.consumeClick()) {
 				Minecraft.getInstance().setScreen(this.createConfigScreen(Minecraft.getInstance().screen));
+			}
+
+			while (entityNameKeybind.consumeClick()) {
+				Entity hovered = getHoveredEntity();
+				if (hovered != null) {
+					String name = hovered.getScoreboardName();
+					Minecraft.getInstance().player.sendSystemMessage(
+							Component.literal("Copied name to clipboard: " )
+									.append(Component.literal(name)
+											.withStyle(ChatFormatting.UNDERLINE)));
+					Minecraft.getInstance().keyboardHandler.setClipboard(name);
+				}
 			}
 		});
 	}
@@ -369,11 +390,13 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		category.addEntry(configBuilder.entryBuilder()
 				.startStrList(Component.literal("Entity Whitelist"), greenscreen().getWhitelist())
 				.setSaveConsumer(newValue -> greenscreen().setWhitelist(newValue))
+				.setDefaultValue(List.of())
 				.build());
 
 		category.addEntry(configBuilder.entryBuilder()
 				.startStrList(Component.literal("Entity Blacklist"), greenscreen().getBlacklist())
 				.setSaveConsumer(newValue -> greenscreen().setBlacklist(newValue))
+				.setDefaultValue(List.of())
 				.build());
 
 		return configBuilder.build();
@@ -390,6 +413,24 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		GreenscreenButton greenscreenButton = new GreenscreenButton(() -> this.createConfigScreen(pauseScreen),
 				pauseScreen.width - 24, pauseScreen.height - 24);
 		return greenscreenButton;
+	}
+
+	private static final float RAYCAST_RANGE = 5f;
+
+	private static Entity getHoveredEntity() {
+		LocalPlayer player = Minecraft.getInstance().player;
+
+		Vec3 start = player.getEyePosition(1f);
+		Vec3 look = player.getLookAngle();
+		Vec3 direction = start.add(look.x * RAYCAST_RANGE, look.y * RAYCAST_RANGE, look.z * RAYCAST_RANGE);
+		AABB bb = player.getBoundingBox()
+				.expandTowards(look.x * RAYCAST_RANGE, look.y * RAYCAST_RANGE, look.z * RAYCAST_RANGE)
+				.expandTowards(1, 1, 1);
+
+		EntityHitResult hitResult = ProjectileUtil.getEntityHitResult(
+				Minecraft.getInstance().level, player, start, direction, bb, (e) -> true);
+
+		return (hitResult == null) ? null : hitResult.getEntity();
 	}
 
 	private static class GreenscreenButton extends Button {
