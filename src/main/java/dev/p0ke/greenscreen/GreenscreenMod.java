@@ -68,6 +68,7 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		KeyMapping toggleKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("Toggle Greenscreen", Type.KEYSYM, GLFW.GLFW_KEY_G, "GreenscreenMod"));
 		KeyMapping configKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("Open Config", Type.KEYSYM, GLFW.GLFW_KEY_F, "GreenscreenMod"));
 		KeyMapping entityNameKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("Get Entity Name", Type.KEYSYM, GLFW.GLFW_KEY_N, "GreenscreenMod"));
+		KeyMapping nameTagKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("Get Entity Name Tag", Type.KEYSYM, GLFW.GLFW_KEY_M, "GreenscreenMod"));
 
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (toggleKeybind.consumeClick()) {
@@ -82,6 +83,18 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 				Entity hovered = getHoveredEntity();
 				if (hovered != null) {
 					String name = hovered.getScoreboardName();
+					Minecraft.getInstance().player.sendSystemMessage(
+							Component.literal("Copied name to clipboard: " )
+									.append(Component.literal(name)
+											.withStyle(ChatFormatting.UNDERLINE)));
+					Minecraft.getInstance().keyboardHandler.setClipboard(name);
+				}
+			}
+
+			while (nameTagKeybind.consumeClick()) {
+				Entity hovered = getHoveredEntity();
+				if (hovered != null) {
+					String name = hovered.getDisplayName().getString();
 					Minecraft.getInstance().player.sendSystemMessage(
 							Component.literal("Copied name to clipboard: " )
 									.append(Component.literal(name)
@@ -396,6 +409,12 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		category.addEntry(configBuilder.entryBuilder()
 				.startStrList(Component.literal("Entity Blacklist"), greenscreen().getBlacklist())
 				.setSaveConsumer(newValue -> greenscreen().setBlacklist(newValue))
+				.setDefaultValue(List.of())
+				.build());
+
+		category.addEntry(configBuilder.entryBuilder()
+				.startStrList(Component.literal("Name Tag Transformers"), greenscreen().getNameTagTransformsList())
+				.setSaveConsumer(newValue -> greenscreen().setNameTagTransforms(newValue))
 				.setDefaultValue(List.of())
 				.build());
 

@@ -12,6 +12,7 @@ import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderer.class)
@@ -34,5 +35,14 @@ public abstract class EntityRendererMixin<T extends Entity> {
                 entity.getScoreboardName().equals(Minecraft.getInstance().player.getScoreboardName())) return;
 
         ci.cancel();
+    }
+
+    @ModifyVariable(
+            method = "renderNameTag(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
+            at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    private Component modifyDisplayName(Component displayName) {
+        if (!GreenscreenMod.greenscreen().state().enabled()) return displayName;
+
+        return Component.literal(GreenscreenMod.greenscreen().getTransformedNameTag(displayName.getString()));
     }
 }

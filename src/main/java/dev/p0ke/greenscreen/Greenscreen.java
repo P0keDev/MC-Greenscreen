@@ -1,11 +1,13 @@
 package dev.p0ke.greenscreen;
 
+import java.util.HashMap;
 import net.minecraft.ChatFormatting;
 
 import java.awt.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 
 
 public class Greenscreen {
@@ -19,6 +21,7 @@ public class Greenscreen {
     private EntityRenderState nameTags;
     private Set<String> whitelist;
     private Set<String> blacklist;
+    private HashMap<String, String> nameTagTransforms;
 
     private BooleanRenderState customSky;
     private Color skyColor;
@@ -34,6 +37,7 @@ public class Greenscreen {
 
         whitelist = new HashSet<>();
         blacklist = new HashSet<>();
+        nameTagTransforms = new HashMap<>();
 
         customSky = BooleanRenderState.ENABLED;
         skyColor = new Color(0, 255, 0);
@@ -85,6 +89,14 @@ public class Greenscreen {
 
     public boolean isBlacklisted(String name) {
         return blacklist.contains(name.toLowerCase());
+    }
+
+    public List<String> getNameTagTransformsList() {
+        return nameTagTransforms.entrySet().stream().map(e -> e.getKey() + " :: " + e.getValue()).toList();
+    }
+
+    public String getTransformedNameTag(String name) {
+        return nameTagTransforms.getOrDefault(name, name);
     }
 
     public BooleanRenderState toggleEnabled() {
@@ -195,6 +207,21 @@ public class Greenscreen {
 
     public void blacklistClear() {
         blacklist.clear();
+    }
+
+    public void setNameTagTransforms(List<String> transforms) {
+        nameTagTransforms.clear();
+        transforms.forEach(t -> {
+            if (!t.isEmpty()) {
+                nameTagTransforms.put(
+                        StringUtils.substringBefore(t, "::").trim(),
+                        StringUtils.substringAfter(t, "::").trim());
+            }
+        });
+    }
+
+    public void nameTagTransformsClear() {
+        nameTagTransforms.clear();
     }
 
     public enum BooleanRenderState {
