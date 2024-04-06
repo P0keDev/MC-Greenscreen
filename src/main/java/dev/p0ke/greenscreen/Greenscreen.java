@@ -15,7 +15,7 @@ public class Greenscreen {
 
     private BooleanRenderState blocks;
     private BooleanRenderState particles;
-    private BooleanRenderState armorStands;
+    private EntityRenderState armorStands;
 
     private EntityRenderState entities;
     private EntityRenderState nameTags;
@@ -32,7 +32,7 @@ public class Greenscreen {
         blocks = BooleanRenderState.DISABLED;
         particles = BooleanRenderState.DISABLED;
         entities = EntityRenderState.BLACKLIST;
-        armorStands = BooleanRenderState.DISABLED;
+        armorStands = EntityRenderState.ALL;
         nameTags = EntityRenderState.SELF;
 
         whitelist = new HashSet<>();
@@ -59,7 +59,7 @@ public class Greenscreen {
         return entities;
     }
 
-    public BooleanRenderState armorStandRenderState() {
+    public EntityRenderState armorStandRenderState() {
         return armorStands;
     }
 
@@ -120,7 +120,7 @@ public class Greenscreen {
         this.entities = entities;
     }
 
-    public void setArmorStandRendering(BooleanRenderState armorStands) {
+    public void setArmorStandRendering(EntityRenderState armorStands) {
         this.armorStands = armorStands;
     }
 
@@ -147,8 +147,8 @@ public class Greenscreen {
         return entities;
     }
 
-    public BooleanRenderState toggleArmorStandRendering() {
-        armorStands = armorStands.toggled();
+    public EntityRenderState toggleArmorStandRendering() {
+        armorStands = armorStands.next();
         return armorStands;
     }
 

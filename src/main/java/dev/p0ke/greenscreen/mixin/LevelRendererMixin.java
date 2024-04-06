@@ -37,15 +37,13 @@ public abstract class LevelRendererMixin {
         if (!GreenscreenMod.greenscreen().state().enabled()) return;
 
         // armor stand check
+        EntityRenderState state;
         if (entity instanceof ArmorStand) {
-            if (!GreenscreenMod.greenscreen().armorStandRenderState().enabled()) {
-                ci.cancel();
-            }
-            return;
+            state = GreenscreenMod.greenscreen().armorStandRenderState();
+        } else {
+            state = GreenscreenMod.greenscreen().entityRenderState();
         }
 
-        // entity check
-        EntityRenderState state = GreenscreenMod.greenscreen().entityRenderState();
         if (state == EntityRenderState.ALL) return;
         if (state == EntityRenderState.PLAYERS && entity instanceof Player) return;
         if (state == EntityRenderState.WHITELIST &&

@@ -176,7 +176,7 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 	}
 
 	private int toggleArmorStands(FabricClientCommandSource src) {
-		BooleanRenderState state = greenscreen().toggleArmorStandRendering();
+		EntityRenderState state = greenscreen().toggleArmorStandRendering();
 		src.sendFeedback(Component.literal("Armor stand rendering: " + state));
 		return 0;
 	}
@@ -381,7 +381,7 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 				.build());
 
 		category.addEntry(configBuilder.entryBuilder()
-				.startEnumSelector(Component.literal("Armor Stand Rendering"), BooleanRenderState.class, greenscreen().armorStandRenderState())
+				.startEnumSelector(Component.literal("Armor Stand Rendering"), EntityRenderState.class, greenscreen().armorStandRenderState())
 				.setSaveConsumer(newValue -> greenscreen().setArmorStandRendering(newValue))
 				.build());
 
