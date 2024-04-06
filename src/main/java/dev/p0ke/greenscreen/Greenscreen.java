@@ -28,7 +28,7 @@ public class Greenscreen {
 
         blocks = BooleanRenderState.DISABLED;
         particles = BooleanRenderState.DISABLED;
-        entities = EntityRenderState.SELF;
+        entities = EntityRenderState.BLACKLIST;
         armorStands = BooleanRenderState.DISABLED;
         nameTags = EntityRenderState.SELF;
 
