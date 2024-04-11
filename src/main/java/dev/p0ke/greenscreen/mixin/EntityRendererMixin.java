@@ -42,6 +42,7 @@ public abstract class EntityRendererMixin<T extends Entity> {
             at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private Component modifyDisplayName(Component displayName) {
         if (!GreenscreenMod.greenscreen().state().enabled()) return displayName;
+        if (!GreenscreenMod.greenscreen().isTransformed(displayName.getString())) return displayName;
 
         return Component.literal(GreenscreenMod.greenscreen().getTransformedNameTag(displayName.getString()));
     }

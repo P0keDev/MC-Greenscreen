@@ -95,6 +95,10 @@ public class Greenscreen {
         return nameTagTransforms.entrySet().stream().map(e -> e.getKey() + " :: " + e.getValue()).toList();
     }
 
+    public boolean isTransformed(String name) {
+        return nameTagTransforms.containsKey(name);
+    }
+
     public String getTransformedNameTag(String name) {
         return nameTagTransforms.getOrDefault(name, name);
     }
