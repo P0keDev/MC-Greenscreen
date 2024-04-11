@@ -24,7 +24,7 @@ public class Greenscreen {
     private HashMap<String, String> nameTagTransforms;
 
     private BooleanRenderState customSky;
-    private Color skyColor;
+    private int skyColor;
 
     public Greenscreen() {
         enabled = BooleanRenderState.DISABLED;
@@ -40,7 +40,7 @@ public class Greenscreen {
         nameTagTransforms = new HashMap<>();
 
         customSky = BooleanRenderState.ENABLED;
-        skyColor = new Color(0, 255, 0);
+        skyColor = Color.GREEN.getRGB();
     }
 
     public BooleanRenderState state() {
@@ -71,7 +71,7 @@ public class Greenscreen {
         return customSky;
     }
 
-    public Color getSkyColor() {
+    public int getSkyColor() {
         return skyColor;
     }
 
@@ -169,8 +169,12 @@ public class Greenscreen {
     public boolean setSkyColor(int r, int g, int b) {
         if (r > 255 || g > 255 || b > 255 ||
             r < 0 || g < 0 || b < 0) return false;
-        skyColor = new Color(r, g, b);
+        skyColor = 0xff << 24 | r << 16 | g << 8 | b;
         return true;
+    }
+
+    public void setSkyColor(int color) {
+        skyColor = color;
     }
 
     public void setWhitelist(List<String> names) {

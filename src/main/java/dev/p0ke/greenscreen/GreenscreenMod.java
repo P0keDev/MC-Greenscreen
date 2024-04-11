@@ -1,5 +1,6 @@
 package dev.p0ke.greenscreen;
 
+import com.google.gson.Gson;
 import com.mojang.blaze3d.platform.InputConstants.Type;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -14,6 +15,11 @@ import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import dev.p0ke.greenscreen.Greenscreen.BooleanRenderState;
 import dev.p0ke.greenscreen.Greenscreen.EntityRenderState;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Supplier;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -23,6 +29,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -59,10 +66,12 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 	private static GreenscreenMod instance;
 	private static Greenscreen greenscreen;
 
+	private static Gson gson = new Gson();
+
 	@Override
 	public void onInitialize() {
 		instance = this;
-		greenscreen = new Greenscreen();
+		loadGreenscreen();
 		ClientCommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess) -> registerCommands(dispatcher)));
 
 		KeyMapping toggleKeybind = KeyBindingHelper.registerKeyBinding(new KeyMapping("Toggle Greenscreen", Type.KEYSYM, GLFW.GLFW_KEY_G, "GreenscreenMod"));
@@ -120,7 +129,7 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder bufferBuilder = tesselator.getBuilder();
 
-		int rgb = greenscreen().getSkyColor().getRGB();
+		int rgb = greenscreen().getSkyColor();
 		for (int i = 0; i < 6; ++i) {
 			poseStack.pushPose();
 			if (i == 1) {
@@ -355,6 +364,36 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		dispatcher.register(literal("gs").redirect(greenscreenNode));
 	}
 
+	private void loadGreenscreen() {
+		try {
+			Path configFile = FabricLoader.getInstance().getConfigDir().resolve("greenscreenconfig.json");
+			if (!Files.exists(configFile)) {
+				greenscreen = new Greenscreen();
+				saveGreenscreen();
+				return;
+			}
+
+			BufferedReader br = Files.newBufferedReader(configFile);
+			greenscreen = gson.fromJson(br, Greenscreen.class);
+		} catch (IOException e) {
+			greenscreen = new Greenscreen();
+			saveGreenscreen();
+		}
+	}
+
+	private void saveGreenscreen() {
+		try {
+			Path configFile = FabricLoader.getInstance().getConfigDir().resolve("greenscreenconfig.json");
+			String output = gson.toJson(greenscreen);
+
+			BufferedWriter bufferedWriter = Files.newBufferedWriter(configFile);
+			bufferedWriter.write(output);
+			bufferedWriter.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public Screen createConfigScreen(Screen parent) {
 		ConfigBuilder configBuilder = ConfigBuilder.create().setParentScreen(parent);
 		configBuilder.setTitle(Component.literal("Greenscreen Config"));
@@ -396,7 +435,7 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 				.build());
 
 		category.addEntry(configBuilder.entryBuilder()
-				.startColorField(Component.literal("Custom Sky Color"), greenscreen().getSkyColor().getRGB() & 0xffffff) // mask out transparency value
+				.startColorField(Component.literal("Custom Sky Color"), greenscreen().getSkyColor() & 0xffffff) // mask out transparency value
 				.setSaveConsumer2(newValue -> greenscreen().setSkyColor(newValue.getRed(), newValue.getGreen(), newValue.getBlue()))
 				.build());
 
@@ -417,6 +456,8 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 				.setSaveConsumer(newValue -> greenscreen().setNameTagTransforms(newValue))
 				.setDefaultValue(List.of())
 				.build());
+
+		configBuilder.setSavingRunnable(this::saveGreenscreen);
 
 		return configBuilder.build();
 	}
