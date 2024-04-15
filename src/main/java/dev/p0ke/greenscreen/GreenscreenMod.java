@@ -436,7 +436,7 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 
 		category.addEntry(configBuilder.entryBuilder()
 				.startColorField(Component.literal("Custom Sky Color"), greenscreen().getSkyColor() & 0xffffff) // mask out transparency value
-				.setSaveConsumer2(newValue -> greenscreen().setSkyColor(newValue.getRed(), newValue.getGreen(), newValue.getBlue()))
+				.setSaveConsumer2(newValue -> greenscreen().setSkyColor(newValue.getColor()))
 				.build());
 
 		category.addEntry(configBuilder.entryBuilder()

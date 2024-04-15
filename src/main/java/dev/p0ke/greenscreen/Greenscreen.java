@@ -92,7 +92,8 @@ public class Greenscreen {
     }
 
     public List<String> getNameTagTransformsList() {
-        return nameTagTransforms.entrySet().stream().map(e -> e.getKey() + " :: " + e.getValue()).toList();
+        return nameTagTransforms.entrySet().stream().map(
+                e -> e.getKey() + " :: " + e.getValue().replace(ChatFormatting.PREFIX_CODE, '&')).toList();
     }
 
     public boolean isTransformed(String name) {
@@ -223,7 +224,7 @@ public class Greenscreen {
             if (!t.isEmpty()) {
                 nameTagTransforms.put(
                         StringUtils.substringBefore(t, "::").trim(),
-                        StringUtils.substringAfter(t, "::").trim());
+                        StringUtils.substringAfter(t, "::").trim().replace('&', ChatFormatting.PREFIX_CODE));
             }
         });
     }
