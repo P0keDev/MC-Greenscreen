@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.mojang.blaze3d.platform.InputConstants.Type;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -122,12 +123,14 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		return greenscreen;
 	}
 
-	public void drawGreenscreenSky(PoseStack poseStack) {
+	public void drawGreenscreenSky(Matrix4f frustumMatrix) {
+		PoseStack poseStack = new PoseStack();
+		poseStack.mulPose(frustumMatrix);
+
 		RenderSystem.enableBlend();
 		RenderSystem.depthMask(false);
 		RenderSystem.setShader(GameRenderer::getPositionColorShader);
 		Tesselator tesselator = Tesselator.getInstance();
-		BufferBuilder bufferBuilder = tesselator.getBuilder();
 
 		int rgb = greenscreen().getSkyColor();
 		for (int i = 0; i < 6; ++i) {
@@ -148,12 +151,12 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 				poseStack.mulPose(Axis.ZP.rotationDegrees(-90.0f));
 			}
 			Matrix4f matrix4f = poseStack.last().pose();
-			bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-			bufferBuilder.vertex(matrix4f, -100.0f, -100.0f, -100.0f).color(rgb).endVertex();
-			bufferBuilder.vertex(matrix4f, -100.0f, -100.0f, 100.0f).color(rgb).endVertex();
-			bufferBuilder.vertex(matrix4f, 100.0f, -100.0f, 100.0f).color(rgb).endVertex();
-			bufferBuilder.vertex(matrix4f, 100.0f, -100.0f, -100.0f).color(rgb).endVertex();
-			tesselator.end();
+			BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+			bufferBuilder.addVertex(matrix4f, -100.0f, -100.0f, -100.0f).setUv(0.0f, 0.0f).setColor(rgb);
+			bufferBuilder.addVertex(matrix4f, -100.0f, -100.0f, 100.0f).setUv(0.0f, 16.0f).setColor(rgb);
+			bufferBuilder.addVertex(matrix4f, 100.0f, -100.0f, 100.0f).setUv(16.0f, 16.0f).setColor(rgb);
+			bufferBuilder.addVertex(matrix4f, 100.0f, -100.0f, -100.0f).setUv(16.0f, 0.0f).setColor(rgb);
+			BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
 			poseStack.popPose();
 		}
 		RenderSystem.depthMask(true);
@@ -501,8 +504,8 @@ public class GreenscreenMod implements ModInitializer, ModMenuApi {
 		}
 
 		@Override
-		public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-			super.render(graphics, mouseX, mouseY, partialTicks);
+		public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+			super.renderWidget(graphics, mouseX, mouseY, partialTicks);
 
 			graphics.fill(this.getX() + 3, this.getY() + 3,
 					this.getX() + 17, this.getY() + 17, 0xFF00FF00);

@@ -21,9 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class LevelRendererMixin {
 
     @Inject(
-            method = "renderChunkLayer(Lnet/minecraft/client/renderer/RenderType;Lcom/mojang/blaze3d/vertex/PoseStack;DDDLorg/joml/Matrix4f;)V",
+            method = "renderSectionLayer(Lnet/minecraft/client/renderer/RenderType;DDDLorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V",
             at = @At("HEAD"), cancellable = true)
-    private void onRenderChunkLayer(RenderType renderType, PoseStack poseStack, double camX, double camY, double camZ, Matrix4f projectionMatrix, CallbackInfo ci) {
+    private void onRenderSectionLayer(RenderType renderType, double camX, double camY, double camZ, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
         if (!GreenscreenMod.greenscreen().state().enabled()) return;
         if (GreenscreenMod.greenscreen().blockRenderState().enabled()) return;
 
@@ -57,13 +57,13 @@ public abstract class LevelRendererMixin {
     }
 
     @Inject(
-            method = "renderSky(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V",
+            method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V",
             at = @At("HEAD"), cancellable = true)
-    private void onRenderSky(PoseStack poseStack, Matrix4f projectionMatrix, float partialTick, Camera camera, boolean isFoggy, Runnable skyFogSetup, CallbackInfo ci) {
+    private void onRenderSky(Matrix4f frustumMatrix, Matrix4f projectionMatrix, float partialTick, Camera camera, boolean isFoggy, Runnable skyFogSetup, CallbackInfo ci) {
         if (!GreenscreenMod.greenscreen().state().enabled()) return;
         if (!GreenscreenMod.greenscreen().customSkyRenderState().enabled()) return;
 
         ci.cancel();
-        GreenscreenMod.instance().drawGreenscreenSky(poseStack);
+        GreenscreenMod.instance().drawGreenscreenSky(frustumMatrix);
     }
 }

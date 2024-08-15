@@ -19,9 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class EntityRendererMixin<T extends Entity> {
 
     @Inject(
-            method = "renderNameTag(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
+            method = "renderNameTag(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IF)V",
             at = @At("HEAD"), cancellable = true)
-    private void onRenderNameTag(T entity, Component displayName, PoseStack matrixStack, MultiBufferSource buffer, int packedLight, CallbackInfo ci) {
+    private void onRenderNameTag(T entity, Component displayName, PoseStack matrixStack, MultiBufferSource buffer, int packedLight, float partialTick, CallbackInfo ci) {
         if (!GreenscreenMod.greenscreen().state().enabled()) return;
 
         EntityRenderState state = GreenscreenMod.greenscreen().nameTageRenderState();
@@ -38,7 +38,7 @@ public abstract class EntityRendererMixin<T extends Entity> {
     }
 
     @ModifyVariable(
-            method = "renderNameTag(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
+            method = "renderNameTag(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IF)V",
             at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private Component modifyDisplayName(Component displayName) {
         if (!GreenscreenMod.greenscreen().state().enabled()) return displayName;
